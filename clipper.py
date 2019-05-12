@@ -7,10 +7,19 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtMultimedia import *
 
+# Preventing Windows's icon choice function for grouped processes (pythonw.exe -> PyClipper,...)
+# See 'https://stackoverflow.com/questions/1551605/how-to-set-applications-taskbar-icon-in-windows-7/1552105#1552105'
+# for further details.
+import ctypes
+myappid = 'Clipper.v1'
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+scriptDir = os.path.dirname(os.path.realpath(__file__))
+
 app = QApplication(sys.argv)
+
 screen_resolution = app.desktop().screenGeometry()
 screen_width, screen_height = screen_resolution.width(), screen_resolution.height()
-scriptDir = os.path.dirname(os.path.realpath(__file__))
 
 window_width = 350
 window_height = 600
@@ -91,11 +100,6 @@ class Clipper(QPushButton):
 	def setClipperText(self, text):
 		self.text_label.setText(text)
 		self.text_label.setStyleSheet("padding: 5px;")
-
-		center_layout = QHBoxLayout()
-		center_layout.setSpacing(0)
-		center_layout.setContentsMargins(0, 0, 0, 0)
-		center_layout.addWidget(self.text_label)
 
 		self.layout.addWidget(self.text_label)
 
