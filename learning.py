@@ -1,37 +1,39 @@
 import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+
+from PyQt5.QtWidgets import (QApplication, QPushButton, QScrollArea,
+                             QVBoxLayout, QWidget)
+
 
 class Window(QWidget):
-	def __init__(self):
-		super().__init__()
+    def __init__(self):
+        super().__init__()
 
-		self.init_main_elements()
-		self.init_main_window()
+        self.init_main_elements()
+        self.init_main_window()
 
-	def init_main_window(self):
-		self.setGeometry(50, 50, 1000, 500)
-		self.setWindowTitle("Testing")
-		self.show()
+    def init_main_window(self):
+        self.setGeometry(50, 50, 1000, 500)
+        self.setWindowTitle("Testing")
+        self.show()
 
-	def init_main_elements(self):
-		box = QVBoxLayout(self)
-		self.setLayout(box)
+    def init_main_elements(self):
+        box = QVBoxLayout(self)
+        self.setLayout(box)
 
-		scroll = QScrollArea(self)
-		box.addWidget(scroll)
+        scroll = QScrollArea(self)
+        box.addWidget(scroll)
 
-		scrollContent = QWidget(scroll)
-		scrollLayout = QVBoxLayout(scrollContent)
-		scrollContent.setLayout(scrollLayout)
+        scrollContent = QWidget(scroll)
+        scrollLayout = QVBoxLayout(scrollContent)
+        scrollContent.setLayout(scrollLayout)
 
-		for i in range(0, 100):
-			scrollLayout.addWidget(QPushButton(str(i)))
+        for i in range(0, 100):
+            scrollLayout.addWidget(QPushButton(str(i)))
 
-		scroll.setWidget(scrollContent)
+        scroll.setWidget(scrollContent)
+
 
 if __name__ == "__main__":
-	app = QApplication(sys.argv)
-	root = Window()
-	sys.exit(app.exec_())
+    app = QApplication(sys.argv)
+    root = Window()
+    sys.exit(app.exec_())
