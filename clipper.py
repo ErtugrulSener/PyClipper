@@ -59,32 +59,51 @@ class DraggableLabel(QLabel):
         self.setText(e.mimeData().text())
 
 
+class ClassicQVBoxLayout(QVBoxLayout):
+
+    def __init__(self, parent=None):
+        if parent:
+            super().__init__(parent)
+        else:
+            super().__init__()
+
+        self.setSpacing(0)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setAlignment(Qt.AlignTop)
+
+
+class ClassicQHBoxLayout(QHBoxLayout):
+
+    def __init__(self, parent=None):
+        if parent:
+            super().__init__(parent)
+        else:
+            super().__init__()
+
+        self.setSpacing(0)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setAlignment(Qt.AlignLeft)
+
+
 class Clipper(QPushButton):
+
     def __init__(self):
         super().__init__()
 
         self.setMinimumHeight(200)
-        self.setMaximumHeight(200)
         self.setStyleSheet("background-color: white; border: 0px 0px 0px white; color: black;")
 
-        self.layout = QVBoxLayout(self)
-        self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setAlignment(Qt.AlignTop)
+        self.main_layout = ClassicQVBoxLayout(self)
 
         self.text_label = DraggableLabel(self)
         self.text_label.move(0, 30)
         self.text_label.setWordWrap(True)
         self.text_label.mousePressEvent = lambda event: self.cpy_to_clipboard()
         self.text_label.setMinimumHeight(170)
-        self.text_label.setMaximumHeight(170)
-        self.text_label.setMinimumWidth(self.width())
-        self.text_label.setMaximumWidth(self.width())
         self.text_label.setStyleSheet("padding: 5px;")
 
         self.titlebar = QFrame(self)
         self.titlebar.setMinimumHeight(30)
-        self.titlebar.setMaximumHeight(30)
         self.titlebar.setStyleSheet("background-color: rgba(50, 50, 50, 0.8);")
 
         self.titlebar_label = QLabel(self)
@@ -98,7 +117,8 @@ class Clipper(QPushButton):
         self.delete_button.clicked.connect(self.delete_button_clicked)
         self.delete_button.setStyleSheet("background-color: red;")
 
-        self.layout.addWidget(self.titlebar)
+        self.main_layout.addWidget(self.titlebar)
+        self.main_layout.addWidget(self.text_label)
 
     def cpy_to_clipboard(self):
         QApplication.clipboard().setText(self.text_label.text())
@@ -108,10 +128,10 @@ class Clipper(QPushButton):
 
     def setClipperText(self, text):
         self.text_label.setText(text)
-        self.layout.addWidget(self.text_label)
 
 
 class Window(QMainWindow):
+
     def __init__(self):
         super().__init__()
 
@@ -122,6 +142,7 @@ class Window(QMainWindow):
         self.init_elements()
         self.init_events()
 
+    # GUI Initialization
     def init_main_window(self):
         self.setGeometry(screen_width - window_width, (screen_height // 2) - (window_height // 2), window_width, window_height)
         self.setFixedSize(self.size())
@@ -144,10 +165,10 @@ class Window(QMainWindow):
         self.clipper_scroll_area.move(0, 42)
         self.clipper_scroll_area.setWidgetResizable(True)
 
-        self.layout = QVBoxLayout(self.clipper_scroll_area)
+        self.scroll_area_layout = QVBoxLayout(self.clipper_scroll_area)
 
         self.scroll_widget = QWidget(self)
-        self.scroll_widget.setLayout(self.layout)
+        self.scroll_widget.setLayout(self.scroll_area_layout)
 
         self.clipper_scroll_area.setWidget(self.scroll_widget)
 
@@ -185,6 +206,7 @@ class Window(QMainWindow):
 
         QApplication.clipboard().dataChanged.connect(self.clipboard_changed)
 
+    # Event functions
     def slider_value_changed(self):
         self.sound_scrollbar_value.setText("{}%".format(self.sound_scrollbar.value()))
 
@@ -201,14 +223,14 @@ class Window(QMainWindow):
 
             clip = Clipper()
             clip.setClipperText(self.clipboard_text)
-            self.layout.insertWidget(0, clip)
+            self.scroll_area_layout.insertWidget(0, clip)
 
             if self.sound_groupbox.isEnabled():
                 SoundHandler.play_clip_sound(self.volume)
 
     def add_clipper_pressed(self):
         clip = Clipper()
-        self.layout.insertWidget(0, clip)
+        self.scroll_area_layout.insertWidget(0, clip)
 
     def set_clipper_volume(self, volume):
         self.volume = volume
