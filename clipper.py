@@ -10,8 +10,9 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QFrame, QGroupBox,
                              QHBoxLayout, QLabel, QMainWindow, QPushButton,
                              QScrollArea, QSlider, QVBoxLayout, QWidget)
 
-from utils import WidgetUtils
 from handlers import SoundHandler
+from objects import ClassicQHBoxLayout, ClassicQPushButton, ClassicQVBoxLayout
+from utils import WidgetUtils
 
 # Preventing Windows's icon choice function for grouped processes (pythonw.exe -> PyClipper,...)
 # See https://stackoverflow.com/questions/1551605/how-to-set-applications-taskbar-icon-in-windows-7/1552105#1552105
@@ -46,32 +47,6 @@ class DraggableLabel(QLabel):
         self.setText(e.mimeData().text())
 
 
-class ClassicQVBoxLayout(QVBoxLayout):
-
-    def __init__(self, parent=None):
-        if parent:
-            super().__init__(parent)
-        else:
-            super().__init__()
-
-        self.setSpacing(0)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setAlignment(Qt.AlignTop)
-
-
-class ClassicQHBoxLayout(QHBoxLayout):
-
-    def __init__(self, parent=None):
-        if parent:
-            super().__init__(parent)
-        else:
-            super().__init__()
-
-        self.setSpacing(0)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setAlignment(Qt.AlignLeft)
-
-
 class Clipper(QPushButton):
 
     def __init__(self):
@@ -99,7 +74,7 @@ class Clipper(QPushButton):
         self.titlebar_label.setAttribute(Qt.WA_TranslucentBackground, True)
         self.titlebar_label.move(35, 0)
 
-        self.delete_button = QPushButton(self)
+        self.delete_button = ClassicQPushButton(self)
         self.delete_button.resize(30, 30)
         self.delete_button.clicked.connect(self.delete_button_clicked)
         self.delete_button.setStyleSheet("background-color: red;")
@@ -137,11 +112,10 @@ class Window(QMainWindow):
         self.setWindowIcon(QIcon(f'{os.path.sep}'.join([scriptDir, 'images', 'favicon.png'])))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setStyleSheet('background-color:#333;color:#ccc')
-        self.setFont(QFont('Serif', 10))
 
     def init_elements(self):
         # Clipper Button Area
-        self.add_clipper_button = QPushButton('Add clipper', self)
+        self.add_clipper_button = ClassicQPushButton('Add clipper', self)
         self.add_clipper_button.resize(100, 32)
 
         self.add_clipper_button_frame, self.add_clipper_button_layout = WidgetUtils.add_widget_with_alignment(self, self.add_clipper_button, QHBoxLayout, Qt.AlignCenter)
@@ -205,6 +179,10 @@ class Window(QMainWindow):
         self.sound_groupbox.setEnabled(state)
 
     def clipboard_changed(self):
+        """
+        This method executes when the actual string in clipboard changes.
+        Furthermore plays a little clipsound using the SoundHandler by PyQT.
+        """
         if self.clipboard_text != QApplication.clipboard().text():
             self.clipboard_text = QApplication.clipboard().text()
 
@@ -215,9 +193,13 @@ class Window(QMainWindow):
             if self.sound_groupbox.isEnabled():
                 SoundHandler.play_clip_sound(self.volume)
 
-    def add_clipper_pressed(self):
+    def add_clipper_pressed(self, index=0):
+        """
+        This method executes when the "Add clipper" button is pressed.
+        It adds a new Clipper on index 0 to the vertical layout in the scroll area.
+        """
         clip = Clipper()
-        self.scroll_area_layout.insertWidget(0, clip)
+        self.scroll_area_layout.insertWidget(index, clip)
 
     def set_clipper_volume(self, volume):
         self.volume = volume
