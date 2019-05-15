@@ -10,6 +10,9 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QFrame, QGroupBox,
                              QHBoxLayout, QLabel, QMainWindow, QPushButton,
                              QScrollArea, QSlider, QVBoxLayout, QWidget)
 
+from utils import WidgetUtils
+from handlers import SoundHandler
+
 # Preventing Windows's icon choice function for grouped processes (pythonw.exe -> PyClipper,...)
 # See https://stackoverflow.com/questions/1551605/how-to-set-applications-taskbar-icon-in-windows-7/1552105#1552105
 # for further details.
@@ -25,22 +28,6 @@ screen_width, screen_height = screen_resolution.width(), screen_resolution.heigh
 
 window_width = 350
 window_height = 600
-
-
-class SoundHandler:
-
-    @staticmethod
-    def play_clip_sound(volume=100):
-        filename = f'{os.path.sep}'.join([scriptDir, 'sounds', 'clipsound.wav'])
-        fullpath = QDir.current().absoluteFilePath(filename)
-        url = QUrl.fromLocalFile(fullpath)
-
-        content = QMediaContent(url)
-        player = QMediaPlayer()
-        player.setMedia(content)
-        player.setVolume(volume)
-        player.play()
-        time.sleep(0.3)
 
 
 class DraggableLabel(QLabel):
@@ -98,7 +85,7 @@ class Clipper(QPushButton):
         self.text_label = DraggableLabel(self)
         self.text_label.move(0, 30)
         self.text_label.setWordWrap(True)
-        self.text_label.mousePressEvent = lambda event: self.cpy_to_clipboard()
+        self.text_label.mousePressEvent = lambda event: self.text_label_pressed()
         self.text_label.setMinimumHeight(170)
         self.text_label.setStyleSheet("padding: 5px;")
 
@@ -120,13 +107,13 @@ class Clipper(QPushButton):
         self.main_layout.addWidget(self.titlebar)
         self.main_layout.addWidget(self.text_label)
 
-    def cpy_to_clipboard(self):
+    def text_label_pressed(self):
         QApplication.clipboard().setText(self.text_label.text())
 
     def delete_button_clicked(self):
         self.setParent(None)
 
-    def setClipperText(self, text):
+    def set_clipper_text(self, text):
         self.text_label.setText(text)
 
 
@@ -157,7 +144,7 @@ class Window(QMainWindow):
         self.add_clipper_button = QPushButton('Add clipper', self)
         self.add_clipper_button.resize(100, 32)
 
-        self.add_clipper_button_frame, self.add_clipper_button_layout = self.add_widget_with_alignment(self, self.add_clipper_button, QHBoxLayout, Qt.AlignCenter)
+        self.add_clipper_button_frame, self.add_clipper_button_layout = WidgetUtils.add_widget_with_alignment(self, self.add_clipper_button, QHBoxLayout, Qt.AlignCenter)
 
         # Clipper Scroll Area
         self.clipper_scroll_area = QScrollArea(self)
@@ -176,7 +163,7 @@ class Window(QMainWindow):
         self.sound_groupbox = QGroupBox("Sound Settings", self)
         self.sound_groupbox.resize(330, 60)
 
-        self.sound_groupbox_frame, self.sound_groupbox_layout = self.add_widget_with_alignment(self, self.sound_groupbox, QHBoxLayout, False)
+        self.sound_groupbox_frame, self.sound_groupbox_layout = WidgetUtils.add_widget_with_alignment(self, self.sound_groupbox, QHBoxLayout, False)
         self.sound_groupbox_frame.resize(400, 75)
         self.sound_groupbox_frame.move(0, 520)
 
@@ -195,8 +182,8 @@ class Window(QMainWindow):
         self.sound_scrollbar_value.setText("100%")
         self.sound_scrollbar_value.setAlignment(Qt.AlignCenter)
 
-        text_width = self.get_label_size(self.sound_scrollbar_value)[0]
-        self.sound_scrollbar_value.move(self.horizontal_align_center(self.sound_scrollbar, text_width), 0)
+        text_width = WidgetUtils.get_label_size(self.sound_scrollbar_value)[0]
+        self.sound_scrollbar_value.move(WidgetUtils.horizontal_align_center(self.sound_scrollbar, text_width), 0)
 
     def init_events(self):
         self.add_clipper_button.clicked.connect(self.add_clipper_pressed)
@@ -222,7 +209,7 @@ class Window(QMainWindow):
             self.clipboard_text = QApplication.clipboard().text()
 
             clip = Clipper()
-            clip.setClipperText(self.clipboard_text)
+            clip.set_clipper_text(self.clipboard_text)
             self.scroll_area_layout.insertWidget(0, clip)
 
             if self.sound_groupbox.isEnabled():
@@ -234,41 +221,6 @@ class Window(QMainWindow):
 
     def set_clipper_volume(self, volume):
         self.volume = volume
-
-    @staticmethod
-    def add_widget_with_alignment(master, widget, layout, alignment=False):
-        tmp_layout = layout()
-        tmp_layout.addWidget(widget)
-        tmp_layout.setSpacing(0)
-        tmp_layout.setContentsMargins(0, 0, 0, 0)
-
-        if alignment:
-            tmp_layout.setAlignment(alignment)
-
-        tmp_frame = QFrame(master)
-        tmp_frame.resize(master.width(), 50)
-        tmp_frame.setLayout(tmp_layout)
-
-        return tmp_frame, tmp_layout
-
-    @staticmethod
-    def get_label_size(elem1):
-        rect = elem1.fontMetrics().boundingRect(elem1.text())
-        return rect.width(), rect.height()
-
-    @staticmethod
-    def horizontal_align_center(elem1, elem2):
-        elem1_width = elem1.frameGeometry().width() if isinstance(elem1, QWidget) else int(elem1)
-        elem2_width = elem2.frameGeometry().width() if isinstance(elem2, QWidget) else int(elem2)
-
-        return (elem1_width // 2) - (elem2_width // 2)
-
-    @staticmethod
-    def vertical_align_center(elem1, elem2):
-        elem1_height = elem1.frameGeometry().height() if isinstance(elem1, QWidget) else int(elem1)
-        elem2_height = elem2.frameGeometry().height() if isinstance(elem2, QWidget) else int(elem2)
-
-        return (elem1_height // 2) - (elem2_height // 2)
 
 
 if __name__ == "__main__":
