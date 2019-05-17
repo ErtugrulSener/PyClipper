@@ -3,8 +3,9 @@ import os
 import sys
 import time
 
+import win32gui
 from PyQt5.QtCore import QDir, Qt, QUrl
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QFontMetrics, QIcon, QPainter
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QFrame, QGroupBox,
                              QHBoxLayout, QLabel, QLineEdit, QMainWindow,
@@ -45,6 +46,14 @@ class DraggableLabel(QLabel):
     def dropEvent(self, e):
         self.setText(e.mimeData().text())
 
+    def paintEvent(self, event):
+        painter = QPainter(self)
+
+        metrics = QFontMetrics(self.font())
+        elided = metrics.elidedText(self.text(), Qt.ElideRight, self.width() - 15)
+
+        painter.drawText(self.rect(), self.alignment(), elided)
+
 
 class Clipper(QPushButton):
 
@@ -54,39 +63,43 @@ class Clipper(QPushButton):
         self.setMinimumHeight(200)
         self.setStyleSheet("background-color: white; border: 0px 0px 0px white; color: black;")
 
-        self.main_layout = ClassicQVBoxLayout(self)
-
-        self.text_label = DraggableLabel(self)
-        self.text_label.move(0, 30)
-        self.text_label.setWordWrap(True)
-        self.text_label.mousePressEvent = lambda event: self.text_label_pressed()
-        self.text_label.setMinimumHeight(170)
-        self.text_label.setStyleSheet("padding: 5px;")
-
         self.titlebar = QFrame(self)
-        self.titlebar.setMinimumHeight(30)
+        self.titlebar.resize(330, 30)
         self.titlebar.setStyleSheet("background-color: rgba(50, 50, 50, 0.8);")
 
-        self.titlebar_text = QLineEdit(self)
-        self.titlebar_text.setStyleSheet("background-color: transparent; color: #ccc;")
-        self.titlebar_text.setText("New Clipper")
+        self.titlebar_text = QLineEdit(self.titlebar)
+        self.titlebar_text.resize(self.width() - 30, 30)
         self.titlebar_text.move(35, 0)
+        self.titlebar_text.setText("New Clipper")
+        self.titlebar_text.setStyleSheet("background-color: transparent; color: #ccc;")
+
+        self.text_label_frame = QFrame(self)
+        self.text_label_frame.resize(330, 170)
+        self.text_label_frame.move(0, 30)
+        self.text_label_frame.mousePressEvent = lambda event: self.text_label_pressed()
+
+        self.text_label = DraggableLabel(self.text_label_frame)
+        self.text_label.resize(self.text_label_frame.frameGeometry().width() - 15, self.text_label_frame.frameGeometry().height() - 15)
+        self.text_label.move(5, 5)
+        self.text_label.mousePressEvent = lambda event: self.text_label_pressed()
+        self.text_label.setWordWrap(True)
+        self.text_label.setAlignment(Qt.AlignTop)
 
         self.delete_button = ClassicQPushButton(self)
         self.delete_button.resize(30, 30)
         self.delete_button.clicked.connect(self.delete_button_clicked)
         self.delete_button.setStyleSheet("background-color: red;")
 
-        self.main_layout.addWidget(self.titlebar)
-        self.main_layout.addWidget(self.text_label)
-
     def text_label_pressed(self):
-        QApplication.clipboard().setText(self.text_label.text())
+        if len(self.text_label.text()) > 0:
+            QApplication.clipboard().setText(self.text_label.text())
 
     def delete_button_clicked(self):
         self.setParent(None)
 
     def set_clipper_text(self, text):
+        print(win32gui.GetWindowText(win32gui.GetForegroundWindow()))
+        self.titlebar_text.setText(win32gui.GetWindowText(win32gui.GetForegroundWindow()))
         self.text_label.setText(text)
 
 

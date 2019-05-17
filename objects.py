@@ -4,27 +4,27 @@ from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout
 
 class ClassicQVBoxLayout(QVBoxLayout):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, spacing=0, margins=(0, 0, 0, 0)):
         if parent:
             super().__init__(parent)
         else:
             super().__init__()
 
-        self.setSpacing(0)
-        self.setContentsMargins(0, 0, 0, 0)
+        self.setSpacing(spacing)
+        self.setContentsMargins(*margins)
         self.setAlignment(Qt.AlignTop)
 
 
 class ClassicQHBoxLayout(QHBoxLayout):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, spacing=0, margins=(0, 0, 0, 0)):
         if parent:
             super().__init__(parent)
         else:
             super().__init__()
 
-        self.setSpacing(0)
-        self.setContentsMargins(0, 0, 0, 0)
+        self.setSpacing(spacing)
+        self.setContentsMargins(*margins)
         self.setAlignment(Qt.AlignLeft)
 
 
