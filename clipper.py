@@ -7,8 +7,9 @@ from PyQt5.QtCore import QDir, Qt, QUrl
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QFrame, QGroupBox,
-                             QHBoxLayout, QLabel, QMainWindow, QPushButton,
-                             QScrollArea, QSlider, QVBoxLayout, QWidget)
+                             QHBoxLayout, QLabel, QLineEdit, QMainWindow,
+                             QPushButton, QScrollArea, QSlider, QVBoxLayout,
+                             QWidget)
 
 from handlers import SoundHandler
 from objects import ClassicQHBoxLayout, ClassicQPushButton, ClassicQVBoxLayout
@@ -19,8 +20,6 @@ from utils import WidgetUtils
 # for further details.
 myappid = 'Clipper_v1.0'
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-
-scriptDir = os.path.dirname(os.path.realpath(__file__))
 
 app = QApplication(sys.argv)
 
@@ -68,11 +67,10 @@ class Clipper(QPushButton):
         self.titlebar.setMinimumHeight(30)
         self.titlebar.setStyleSheet("background-color: rgba(50, 50, 50, 0.8);")
 
-        self.titlebar_label = QLabel(self)
-        self.titlebar_label.setText("New Clipper")
-        self.titlebar_label.setStyleSheet("color: #ccc;")
-        self.titlebar_label.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.titlebar_label.move(35, 0)
+        self.titlebar_text = QLineEdit(self)
+        self.titlebar_text.setStyleSheet("background-color: transparent; color: #ccc;")
+        self.titlebar_text.setText("New Clipper")
+        self.titlebar_text.move(35, 0)
 
         self.delete_button = ClassicQPushButton(self)
         self.delete_button.resize(30, 30)
@@ -109,7 +107,7 @@ class Window(QMainWindow):
         self.setGeometry(screen_width - window_width, (screen_height // 2) - (window_height // 2), window_width, window_height)
         self.setFixedSize(self.size())
         self.setWindowTitle("PyClipper")
-        self.setWindowIcon(QIcon(f'{os.path.sep}'.join([scriptDir, 'images', 'favicon.png'])))
+        self.setWindowIcon(QIcon("images/favicon.png"))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setStyleSheet('background-color:#333;color:#ccc')
 
