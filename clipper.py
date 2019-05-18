@@ -1,7 +1,10 @@
 import ctypes
 import os
+import pickle
+import random
 import sys
 import time
+from collections import OrderedDict
 
 import win32gui
 from PyQt5.QtCore import QDir, Qt, QUrl
@@ -29,6 +32,7 @@ screen_width, screen_height = screen_resolution.width(), screen_resolution.heigh
 
 window_width = 350
 window_height = 600
+window_clippers = OrderedDict()
 
 
 class DraggableLabel(QLabel):
@@ -55,6 +59,8 @@ class Clipper(QPushButton):
 
     def __init__(self):
         super().__init__()
+
+        self.id = 0
 
         self.setMinimumHeight(200)
         self.setStyleSheet("background-color: white; border: 0px 0px 0px white; color: black;")
@@ -91,11 +97,27 @@ class Clipper(QPushButton):
             QApplication.clipboard().setText(self.text_label.text())
 
     def delete_button_clicked(self):
+        window_clippers.pop(self.id)
         self.setParent(None)
 
+    def get_clipper_text(self):
+        return self.text_label.text()
+
     def set_clipper_text(self, text):
-        self.titlebar_text.setText(win32gui.GetWindowText(win32gui.GetForegroundWindow()))
+        self.set_title(win32gui.GetWindowText(win32gui.GetForegroundWindow()))
         self.text_label.setText(text)
+
+    def set_title(self, text):
+        self.titlebar_text.setText(text)
+
+    def get_title(self):
+        return self.titlebar_text.text()
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
 
 class Window(QMainWindow):
@@ -109,6 +131,21 @@ class Window(QMainWindow):
         self.init_main_window()
         self.init_elements()
         self.init_events()
+
+        self.load_data()
+
+    def load_data(self):
+        if not os.path.isfile("data.pkl"):
+            return False
+
+        with open("data.pkl", "rb") as read_data:
+            window_clippers = pickle.load(read_data)
+
+            for clipper_id, pair in window_clippers.items():
+                label_text = pair["text"]
+                titlebar_text = pair["title"]
+
+                self.add_clipper(0, label_text, titlebar_text, clipper_id)
 
     # GUI Initialization
     def init_main_window(self):
@@ -166,11 +203,16 @@ class Window(QMainWindow):
         self.sound_scrollbar_value.move(WidgetUtils.horizontal_align_center(self.sound_scrollbar, text_width), 0)
 
     def init_events(self):
+        # Events for application
+        self.destroyed.connect(self._on_destroyed)
+
+        # Events for widgets on applicaton
         self.add_clipper_button.clicked.connect(self.add_clipper_pressed)
         self.sound_checkbox.stateChanged.connect(self.sound_state_changed)
         self.sound_scrollbar.valueChanged.connect(self.slider_value_changed)
         self.sound_scrollbar.sliderReleased.connect(self.slider_released)
 
+        # Global events
         QApplication.clipboard().dataChanged.connect(self.clipboard_changed)
 
     # Event functions
@@ -184,7 +226,7 @@ class Window(QMainWindow):
         state = self.sound_checkbox.checkState() == 2
         self.sound_groupbox.setEnabled(state)
 
-    def clipboard_changed(self):
+    def clipboard_changed(self, index=0):
         """
         This method executes when the actual string in clipboard changes.
         Furthermore plays a little clipsound using the SoundHandler by PyQT.
@@ -192,27 +234,59 @@ class Window(QMainWindow):
         if self.clipboard_text != QApplication.clipboard().text():
             self.clipboard_text = QApplication.clipboard().text()
 
-            clip = Clipper()
-            clip.set_clipper_text(self.clipboard_text)
-            self.scroll_area_layout.insertWidget(0, clip)
-
             if self.sound_groupbox.isEnabled():
                 SoundHandler.play_clip_sound(self.volume)
+
+            self.add_clipper(index, self.clipboard_text)
 
     def add_clipper_pressed(self, index=0):
         """
         This method executes when the "Add clipper" button is pressed.
         It adds a new Clipper on index 0 to the vertical layout in the scroll area.
         """
+        self.add_clipper(index)
+
+    def add_clipper(self, index, text="", title="", random_id=None):
         clip = Clipper()
         self.scroll_area_layout.insertWidget(index, clip)
 
+        if len(text) > 0:
+            clip.set_clipper_text(text)
+
+        if len(title) > 0:
+            clip.set_title(title)
+
+        # Create new random id, if not a specific id is given
+        if random_id == None:
+            random_id = random.randint(100000, 999999)
+
+        # Reroll id if it exists already
+        while(window_clippers.get(random_id)):
+            random_id = random.randint(100000, 999999)
+
+        clip.set_id(random_id)
+
+        window_clippers[clip.get_id()] = {"title": clip.get_title(), "text": clip.get_clipper_text()}
+
     def set_clipper_volume(self, volume):
         self.volume = volume
+
+    @staticmethod
+    def _on_destroyed(self):
+        """
+        This method executes when the window is destroyed.
+        Saves the window_clippers in a file, so that it can be loaded afterwards.
+        """
+        with open("data.pkl", "bw") as write_data:
+            pickle.dump(window_clippers, write_data)
 
 
 if __name__ == "__main__":
     root = Window()
     root.show()
+
+    # Delete window on close to trigger self.on_destroy
+    # This method has to be called after root.show()
+    root.setAttribute(Qt.WA_DeleteOnClose, True)
 
     sys.exit(app.exec_())
