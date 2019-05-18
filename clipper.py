@@ -48,11 +48,7 @@ class DraggableLabel(QLabel):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-
-        metrics = QFontMetrics(self.font())
-        elided = metrics.elidedText(self.text(), Qt.ElideRight, self.width() - 15)
-
-        painter.drawText(self.rect(), self.alignment(), elided)
+        painter.drawText(self.rect(), Qt.TextWordWrap, self.text())
 
 
 class Clipper(QPushButton):
@@ -98,7 +94,6 @@ class Clipper(QPushButton):
         self.setParent(None)
 
     def set_clipper_text(self, text):
-        print(win32gui.GetWindowText(win32gui.GetForegroundWindow()))
         self.titlebar_text.setText(win32gui.GetWindowText(win32gui.GetForegroundWindow()))
         self.text_label.setText(text)
 
