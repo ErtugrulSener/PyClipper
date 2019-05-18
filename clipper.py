@@ -60,7 +60,7 @@ class Clipper(QPushButton):
     def __init__(self):
         super().__init__()
 
-        self.id = 0
+        self._id = 0
 
         self.setMinimumHeight(200)
         self.setStyleSheet("background-color: white; border: 0px 0px 0px white; color: black;")
@@ -69,23 +69,23 @@ class Clipper(QPushButton):
         self.titlebar.resize(330, 30)
         self.titlebar.setStyleSheet("background-color: rgba(50, 50, 50, 0.8);")
 
-        self.titlebar_text = QLineEdit(self.titlebar)
-        self.titlebar_text.resize(self.width() - 30, 30)
-        self.titlebar_text.move(35, 0)
-        self.titlebar_text.setText("New Clipper")
-        self.titlebar_text.setStyleSheet("background-color: transparent; color: #ccc;")
+        self._titlebar_text = QLineEdit(self.titlebar)
+        self._titlebar_text.resize(self.width() - 30, 30)
+        self._titlebar_text.move(35, 0)
+        self._titlebar_text.setText("New Clipper")
+        self._titlebar_text.setStyleSheet("background-color: transparent; color: #ccc;")
 
         self.text_label_frame = QFrame(self)
         self.text_label_frame.resize(330, 170)
         self.text_label_frame.move(0, 30)
         self.text_label_frame.mousePressEvent = lambda event: self.text_label_pressed()
 
-        self.text_label = DraggableLabel(self.text_label_frame)
-        self.text_label.resize(self.text_label_frame.frameGeometry().width() - 15, self.text_label_frame.frameGeometry().height() - 15)
-        self.text_label.move(5, 5)
-        self.text_label.mousePressEvent = lambda event: self.text_label_pressed()
-        self.text_label.setWordWrap(True)
-        self.text_label.setAlignment(Qt.AlignTop)
+        self._text_label = DraggableLabel(self.text_label_frame)
+        self._text_label.resize(self.text_label_frame.frameGeometry().width() - 15, self.text_label_frame.frameGeometry().height() - 15)
+        self._text_label.move(5, 5)
+        self._text_label.mousePressEvent = lambda event: self.text_label_pressed()
+        self._text_label.setWordWrap(True)
+        self._text_label.setAlignment(Qt.AlignTop)
 
         self.delete_button = ClassicQPushButton(self)
         self.delete_button.resize(30, 30)
@@ -93,31 +93,37 @@ class Clipper(QPushButton):
         self.delete_button.setStyleSheet("background-color: red;")
 
     def text_label_pressed(self):
-        if len(self.text_label.text()) > 0:
-            QApplication.clipboard().setText(self.text_label.text())
+        if len(self._text_label.text()) > 0:
+            QApplication.clipboard().setText(self._text_label.text())
 
     def delete_button_clicked(self):
         window_clippers.pop(self.id)
         self.setParent(None)
 
-    def get_clipper_text(self):
-        return self.text_label.text()
+    @property
+    def text(self):
+        return self._text_label.text()
 
-    def set_clipper_text(self, text):
-        self.set_title(win32gui.GetWindowText(win32gui.GetForegroundWindow()))
-        self.text_label.setText(text)
+    @text.setter
+    def text(self, text):
+        self.title = win32gui.GetWindowText(win32gui.GetForegroundWindow())
+        self._text_label.setText(text)
 
-    def set_title(self, text):
-        self.titlebar_text.setText(text)
+    @property
+    def title(self):
+        return self._titlebar_text.text()
 
-    def get_title(self):
-        return self.titlebar_text.text()
+    @title.setter
+    def title(self, text):
+        self._titlebar_text.setText(text)
 
-    def get_id(self):
-        return self.id
+    @property
+    def id(self):
+        return self._id
 
-    def set_id(self, id):
-        self.id = id
+    @id.setter
+    def id(self, id):
+        self._id = id
 
 
 class Window(QMainWindow):
@@ -251,22 +257,21 @@ class Window(QMainWindow):
         self.scroll_area_layout.insertWidget(index, clip)
 
         if len(text) > 0:
-            clip.set_clipper_text(text)
+            clip.text = text
 
         if len(title) > 0:
-            clip.set_title(title)
+            clip.title = title
 
         # Create new random id, if not a specific id is given
-        if random_id == None:
+        if random_id is None:
             random_id = random.randint(100000, 999999)
 
         # Reroll id if it exists already
         while(window_clippers.get(random_id)):
             random_id = random.randint(100000, 999999)
 
-        clip.set_id(random_id)
-
-        window_clippers[clip.get_id()] = {"title": clip.get_title(), "text": clip.get_clipper_text()}
+        clip.id = random_id
+        window_clippers[clip.id] = {"title": clip.title, "text": clip.text}
 
     def set_clipper_volume(self, volume):
         self.volume = volume
