@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 import win32gui
 from PyQt5.QtCore import QDir, Qt, QUrl, pyqtSignal
-from PyQt5.QtGui import QFont, QFontMetrics, QIcon, QPainter, QColor
+from PyQt5.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import (
     QApplication, QCheckBox, QFrame, QGraphicsDropShadowEffect, QGroupBox,
@@ -38,16 +38,9 @@ window_clippers = OrderedDict()
 
 class Clipper(QPushButton):
 
-    def enterEvent(self, event):
-        self.shadow.setBlurRadius(15)
-
-    def leaveEvent(self, event):
-        self.shadow.setBlurRadius(0)
-
     def __init__(self):
         super().__init__()
 
-        self.setObjectName("ClipperButton")
         self._id = 0
 
         self.shadow = QGraphicsDropShadowEffect(self)
@@ -56,9 +49,14 @@ class Clipper(QPushButton):
 
         self.setMinimumHeight(200)
         self.setGraphicsEffect(self.shadow)
+        self.setObjectName("ClipperButton")
+
+        self.enterEvent = lambda event: self.shadow.setBlurRadius(15)
+        self.leaveEvent = lambda event: self.shadow.setBlurRadius(0)
 
         self.titlebar = QFrame(self)
         self.titlebar.resize(330, 30)
+        self.titlebar.setObjectName("ClipperTitlebar")
 
         self._titlebar_text = QLineEdit(self.titlebar)
         self._titlebar_text.resize(self.width() - 30, 30)

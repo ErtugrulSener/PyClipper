@@ -1,7 +1,37 @@
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPainter
 import sys
 
-from PyQt5.QtWidgets import (QApplication, QPushButton, QScrollArea,
+from PyQt5.QtWidgets import (QApplication, QLabel, QPushButton, QScrollArea,
                              QVBoxLayout, QWidget)
+
+app = QApplication(sys.argv)
+
+
+class QLabel(QLabel):
+    def __init__(self, parent=None):
+        if parent:
+            super().__init__(parent)
+        else:
+            super().__init__()
+
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasFormat('text/plain'):
+            e.accept()
+        else:
+            e.ignore()
+
+    def dropEvent(self, e):
+        self.setText(e.mimeData().text())
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.drawText(self.rect(), Qt.TextWordWrap, self.text())
+
+
+c = QLabel()
 
 
 class Window(QWidget):
@@ -34,6 +64,5 @@ class Window(QWidget):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
     root = Window()
     sys.exit(app.exec_())
