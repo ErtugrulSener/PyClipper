@@ -26,6 +26,7 @@ myappid = 'Clipper_v1.0'
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 app = QApplication(sys.argv)
+app.setStyleSheet(open("style.css").read())
 
 screen_resolution = app.desktop().screenGeometry()
 screen_width, screen_height = screen_resolution.width(), screen_resolution.height()
@@ -46,6 +47,7 @@ class Clipper(QPushButton):
     def __init__(self):
         super().__init__()
 
+        self.setObjectName("ClipperButton")
         self._id = 0
 
         self.shadow = QGraphicsDropShadowEffect(self)
@@ -53,24 +55,15 @@ class Clipper(QPushButton):
         self.shadow.setColor(QColor(255, 255, 255))
 
         self.setMinimumHeight(200)
-        self.setStyleSheet("""
-                            * {
-                                background-color: white;
-                                border: 0px 0px 0px white;
-                                color: black;
-                            }
-                            """)
         self.setGraphicsEffect(self.shadow)
 
         self.titlebar = QFrame(self)
         self.titlebar.resize(330, 30)
-        self.titlebar.setStyleSheet("background-color: rgba(50, 50, 50, 0.8);")
 
         self._titlebar_text = QLineEdit(self.titlebar)
         self._titlebar_text.resize(self.width() - 30, 30)
-        self._titlebar_text.move(35, 0)
+        self._titlebar_text.move(30, 0)
         self._titlebar_text.setText("New Clipper")
-        self._titlebar_text.setStyleSheet("background-color: transparent; color: #ccc;")
 
         self.text_label_frame = QFrame(self)
         self.text_label_frame.resize(330, 170)
@@ -87,7 +80,6 @@ class Clipper(QPushButton):
         self.delete_button = QPushButton(self)
         self.delete_button.resize(30, 30)
         self.delete_button.clicked.connect(self.delete_button_clicked)
-        self.delete_button.setStyleSheet("background-color: red;")
 
     def text_label_pressed(self):
         if len(self._text_label.text()) > 0:
@@ -157,7 +149,6 @@ class Window(QMainWindow):
         self.setWindowTitle("PyClipper")
         self.setWindowIcon(QIcon("images/favicon.png"))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setStyleSheet('background-color:#333;color:#ccc')
 
     def init_elements(self):
         # Clipper Button Area
