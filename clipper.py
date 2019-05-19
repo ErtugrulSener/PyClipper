@@ -7,16 +7,16 @@ import time
 from collections import OrderedDict
 
 import win32gui
-from PyQt5.QtCore import QDir, Qt, QUrl
-from PyQt5.QtGui import QFont, QFontMetrics, QIcon, QPainter
+from PyQt5.QtCore import QDir, Qt, QUrl, pyqtSignal
+from PyQt5.QtGui import QFont, QFontMetrics, QIcon, QPainter, QColor
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QFrame, QGroupBox,
-                             QHBoxLayout, QLabel, QLineEdit, QMainWindow,
-                             QPushButton, QScrollArea, QSlider, QVBoxLayout,
-                             QWidget)
+from PyQt5.QtWidgets import (
+    QApplication, QCheckBox, QFrame, QGraphicsDropShadowEffect, QGroupBox,
+    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QScrollArea,
+    QSlider, QVBoxLayout, QWidget)
 
 from handlers import SoundHandler
-from objects import ClassicQHBoxLayout, ClassicQPushButton, ClassicQVBoxLayout
+from objects import ClassicQLabel
 from utils import WidgetUtils
 
 # Preventing Windows's icon choice function for grouped processes (pythonw.exe -> PyClipper,...)
@@ -35,35 +35,32 @@ window_height = 600
 window_clippers = OrderedDict()
 
 
-class DraggableLabel(QLabel):
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setAcceptDrops(True)
-
-    def dragEnterEvent(self, e):
-        if e.mimeData().hasFormat('text/plain'):
-            e.accept()
-        else:
-            e.ignore()
-
-    def dropEvent(self, e):
-        self.setText(e.mimeData().text())
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.drawText(self.rect(), Qt.TextWordWrap, self.text())
-
-
 class Clipper(QPushButton):
+
+    def enterEvent(self, event):
+        self.shadow.setBlurRadius(15)
+
+    def leaveEvent(self, event):
+        self.shadow.setBlurRadius(0)
 
     def __init__(self):
         super().__init__()
 
         self._id = 0
 
+        self.shadow = QGraphicsDropShadowEffect(self)
+        self.shadow.setOffset(0, 0)
+        self.shadow.setColor(QColor(255, 255, 255))
+
         self.setMinimumHeight(200)
-        self.setStyleSheet("background-color: white; border: 0px 0px 0px white; color: black;")
+        self.setStyleSheet("""
+                            * {
+                                background-color: white;
+                                border: 0px 0px 0px white;
+                                color: black;
+                            }
+                            """)
+        self.setGraphicsEffect(self.shadow)
 
         self.titlebar = QFrame(self)
         self.titlebar.resize(330, 30)
@@ -80,14 +77,14 @@ class Clipper(QPushButton):
         self.text_label_frame.move(0, 30)
         self.text_label_frame.mousePressEvent = lambda event: self.text_label_pressed()
 
-        self._text_label = DraggableLabel(self.text_label_frame)
+        self._text_label = ClassicQLabel(self.text_label_frame)
         self._text_label.resize(self.text_label_frame.frameGeometry().width() - 15, self.text_label_frame.frameGeometry().height() - 15)
         self._text_label.move(5, 5)
         self._text_label.mousePressEvent = lambda event: self.text_label_pressed()
         self._text_label.setWordWrap(True)
         self._text_label.setAlignment(Qt.AlignTop)
 
-        self.delete_button = ClassicQPushButton(self)
+        self.delete_button = QPushButton(self)
         self.delete_button.resize(30, 30)
         self.delete_button.clicked.connect(self.delete_button_clicked)
         self.delete_button.setStyleSheet("background-color: red;")
@@ -164,7 +161,7 @@ class Window(QMainWindow):
 
     def init_elements(self):
         # Clipper Button Area
-        self.add_clipper_button = ClassicQPushButton('Add clipper', self)
+        self.add_clipper_button = QPushButton('Add clipper', self)
         self.add_clipper_button.resize(100, 32)
 
         self.add_clipper_button_frame, self.add_clipper_button_layout = WidgetUtils.add_widget_with_alignment(self, self.add_clipper_button, QHBoxLayout, Qt.AlignCenter)
@@ -289,9 +286,6 @@ class Window(QMainWindow):
 if __name__ == "__main__":
     root = Window()
     root.show()
-
-    # Delete window on close to trigger self.on_destroy
-    # This method has to be called after root.show()
     root.setAttribute(Qt.WA_DeleteOnClose, True)
 
     sys.exit(app.exec_())
