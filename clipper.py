@@ -38,10 +38,11 @@ window_clippers = OrderedDict()
 
 class Clipper(QPushButton):
 
-    def __init__(self):
+    def __init__(self, master):
         super().__init__()
 
         self._id = 0
+        self.master = master
 
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setOffset(0, 0)
@@ -85,6 +86,7 @@ class Clipper(QPushButton):
 
     def delete_button_clicked(self):
         window_clippers.pop(self.id)
+        self.master.resize_window_clippers()
         self.setParent(None)
 
     @property
@@ -120,6 +122,7 @@ class Window(QMainWindow):
 
         self.clipboard_text = QApplication.clipboard().text()
         self.volume = 100
+        self.clippers = []
 
         self.init_main_window()
         self.init_elements()
@@ -239,7 +242,7 @@ class Window(QMainWindow):
         self.add_clipper(index)
 
     def add_clipper(self, index, text="", title="", random_id=None):
-        clip = Clipper()
+        clip = Clipper(self)
         self.scroll_area_layout.insertWidget(index, clip)
 
         if len(text) > 0:
@@ -258,6 +261,16 @@ class Window(QMainWindow):
 
         clip.id = random_id
         window_clippers[clip.id] = {"title": clip.title, "text": clip.text}
+
+        self.clippers.append(clip)
+        self.resize_window_clippers()
+
+    def resize_window_clippers(self):
+        for clip in self.clippers:  
+            if len(window_clippers) > 2:
+                clip.setFixedWidth(314)
+            else:
+                clip.setFixedWidth(330)
 
     def set_clipper_volume(self, volume):
         self.volume = volume
